@@ -71,3 +71,11 @@ def create_booking(*, client, service, start_time, event_location, notes=""):
             vendor_amount_paise=total - fee,
             hold_expires_at=now + timedelta(minutes=settings.BOOKING_HOLD_MINUTES),
         )
+
+
+def mark_booking_paid(booking):
+    if booking.status != S.PENDING_PAYMENT:
+        raise BookingError(f"Cannot pay a booking in status {booking.status}.")
+    booking.status = S.PAID
+    booking.hold_expires_at = None
+    booking.save(update_fields=["status", "hold_expires_at", "updated_at"])

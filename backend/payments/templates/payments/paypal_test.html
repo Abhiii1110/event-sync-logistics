@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>PayPal sandbox test</title></head>
+<body>
+  <h3>PayPal sandbox test (dev only)</h3>
+  <p>Client access token: <input id="token" size="70"></p>
+  <p>Booking ID: <input id="booking" size="6"></p>
+  <div id="paypal-buttons"></div>
+  <pre id="out"></pre>
+
+  <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency={{ currency }}"></script>
+  <script>
+    const out = document.getElementById("out");
+    const headers = () => ({
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + document.getElementById("token").value.trim()
+    });
+
+    paypal.Buttons({
+      createOrder: async () => {
+        const r = await fetch("/api/payments/paypal/create-order/", {
+          method: "POST", headers: headers(),
+          body: JSON.stringify({ booking_id: Number(document.getElementById("booking").value) })
+        });
+        const d = await r.json();
+        out.textContent = JSON.stringify(d, null, 2);
+        if (!r.ok) throw new Error(d.detail);
+        return d.paypal_order_id;
+      },
+      onApprove: async (data) => {
+        const r = await fetch("/api/payments/paypal/capture/", {
+          method: "POST", headers: headers(),
+          body: JSON.stringify({ paypal_order_id: data.orderID })
+        });
+        out.textContent = JSON.stringify(await r.json(), null, 2);
+      },
+      onError: (err) => { out.textContent += "\nError: " + err; }
+    }).render("#paypal-buttons");
+  </script>
+</body>
+</html>

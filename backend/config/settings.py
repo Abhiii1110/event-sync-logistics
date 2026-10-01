@@ -148,4 +148,10 @@ REST_FRAMEWORK = {
 
 # Business rules
 PLATFORM_FEE_PERCENT = 10
-BOOKING_HOLD_MINUTES = 15
+BOOKING_HOLD_MINUTES = 60
+
+# PAYMENTS (PAYPAL)
+PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")
+PAYPAL_CLIENT_SECRET = config("PAYPAL_CLIENT_SECRET", default="")
+PAYPAL_BASE_URL = config("PAYPAL_BASE_URL", default="https://api-m.sandbox.paypal.com")
+PAYPAL_CURRENCY = "USD"   # sandbox-safe; check PayPal's supported-currency list before using INR
