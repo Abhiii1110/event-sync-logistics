@@ -12,6 +12,12 @@ class Booking(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
         REFUNDED = "REFUNDED", "Refunded"
 
+    class CancelledBy(models.TextChoices):
+        CLIENT = "CLIENT", "Client"
+        VENDOR = "VENDOR", "Vendor"
+        ADMIN = "ADMIN", "Admin"
+        SYSTEM = "SYSTEM", "System"
+
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="bookings"
     )
@@ -39,6 +45,13 @@ class Booking(models.Model):
     # An unpaid booking holds the slot only until this time
     hold_expires_at = models.DateTimeField(null=True, blank=True)
 
+    vendor_confirmed_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancelled_by = models.CharField(max_length=10, choices= CancelledBy.choices, blank=True)
+    cancel_reason = models.CharField(max_length=255, blank=True)
+    refund_paise = models.PositiveBigIntegerField(default=0)   # refund owed on cancellation
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -48,3 +61,7 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking #{self.pk} ({self.status})"
+
+    
+
+        

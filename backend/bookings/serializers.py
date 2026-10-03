@@ -24,3 +24,11 @@ class BookingSerializer(serializers.ModelSerializer):
             "total_paise", "platform_fee_paise", "vendor_amount_paise",
             "hold_expires_at", "created_at",
         )
+
+    def get_refund_status(self, obj):
+        if obj.refund_paise == 0:
+            return "NONE"
+        return "DONE" if obj.status == Booking.Status.REFUNDED else "PENDING"
+
+class ReasonSerializer(serializers.Serializer):
+    reason = serializers.CharField(required=False, allow_blank=True, max_length=255)

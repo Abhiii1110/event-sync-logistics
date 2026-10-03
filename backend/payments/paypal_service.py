@@ -64,3 +64,26 @@ def capture_order(paypal_order_id):
     if r.status_code not in (200, 201):
         raise PayPalError(f"Capture failed: {r.text}")
     return r.json()          # check ["status"] == "COMPLETED"
+
+def refund_capture(capture_id, amount_paise, request_id):
+    token = _access_token()
+    r = requests.post(
+        f"{settings.PAYPAL_BASE_URL}/v2/payments/captures/{capture_id}/refund",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "PayPal-Request-Id": request_id,   # same id on retry = no double refund
+        },
+        json={
+            "amount": {
+                "currency_code": settings.PAYPAL_CURRENCY,
+                "value": _money(amount_paise),
+            },
+            "note_to_payer": "Booking cancelled",
+        },
+        timeout=15,
+    )
+    if r.status_code not in (200, 201):
+        raise PayPalError(f"Refund failed: {r.text}")
+    return r.json()          # contains "id" and "status"
+

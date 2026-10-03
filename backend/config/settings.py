@@ -155,3 +155,9 @@ PAYPAL_CLIENT_ID = config("PAYPAL_CLIENT_ID", default="")
 PAYPAL_CLIENT_SECRET = config("PAYPAL_CLIENT_SECRET", default="")
 PAYPAL_BASE_URL = config("PAYPAL_BASE_URL", default="https://api-m.sandbox.paypal.com")
 PAYPAL_CURRENCY = "USD"   # sandbox-safe; check PayPal's supported-currency list before using INR
+
+# Booking lifecycle rules
+VENDOR_RESPONSE_HOURS = 24         # vendor must confirm/decline within this time
+AUTO_COMPLETE_AFTER_HOURS = 24     # auto-complete this long after the event ends
+CANCEL_FULL_REFUND_HOURS = 168     # client cancels 7+ days ahead: 100% refund
+CANCEL_HALF_REFUND_HOURS = 48      # 2 to 7 days ahead: 50%; under 2 days: 0%

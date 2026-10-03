@@ -18,6 +18,13 @@ class BookingError(Exception):
 class SlotUnavailable(BookingError):
     pass
 
+class BookingNotFound(BookingError):
+    pass
+
+
+class InvalidTransition(BookingError):
+    pass
+
 
 def blocking_bookings(vendor_id):
     """Bookings that currently occupy the vendor's calendar."""
@@ -73,9 +80,36 @@ def create_booking(*, client, service, start_time, event_location, notes=""):
         )
 
 
+# def mark_booking_paid(booking):
+#     if booking.status != S.PENDING_PAYMENT:
+#         raise BookingError(f"Cannot pay a booking in status {booking.status}.")
+#     booking.status = S.PAID
+#     booking.hold_expires_at = None
+#     booking.save(update_fields=["status", "hold_expires_at", "updated_at"])
+# Every legal status change. Anything not listed here is rejected.
+ALLOWED_TRANSITIONS = {
+    S.PENDING_PAYMENT: {S.PAID, S.CANCELLED},
+    S.PAID: {S.VENDOR_CONFIRMED, S.CANCELLED},
+    S.VENDOR_CONFIRMED: {S.COMPLETED, S.CANCELLED},
+    S.COMPLETED: {S.PAYOUT_RELEASED},
+    S.CANCELLED: {S.REFUNDED},
+}
+
+
+def check_transition(booking, new_status):
+    if new_status not in ALLOWED_TRANSITIONS.get(booking.status, set()):
+        raise InvalidTransition(
+            f"A booking in status {booking.status} cannot move to {new_status}.")
+
+
+def change_status(booking, new_status, **fields):
+    """The ONLY place a booking's status should change."""
+    check_transition(booking, new_status)
+    booking.status = new_status
+    for name, value in fields.items():
+        setattr(booking, name, value)
+    booking.save(update_fields=["status", "updated_at", *fields.keys()])
+
+
 def mark_booking_paid(booking):
-    if booking.status != S.PENDING_PAYMENT:
-        raise BookingError(f"Cannot pay a booking in status {booking.status}.")
-    booking.status = S.PAID
-    booking.hold_expires_at = None
-    booking.save(update_fields=["status", "hold_expires_at", "updated_at"])
+    change_status(booking, S.PAID, hold_expires_at=None)

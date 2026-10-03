@@ -20,6 +20,8 @@ class Payment(models.Model):
     provider_payment_id = models.CharField(max_length=64, blank=True)
     amount_paise = models.PositiveBigIntegerField()
     currency = models.CharField(max_length=3)
+    refunded_paise = models.PositiveBigIntegerField(default=0)
+    refund_id = models.CharField(max_length=64, blank=True)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.CREATED)
     raw_response = models.JSONField(null=True, blank=True)   # gateway reply, useful for debugging
     created_at = models.DateTimeField(auto_now_add=True)

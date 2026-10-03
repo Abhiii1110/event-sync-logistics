@@ -6,7 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from bookings.models import Booking
-from bookings.services import BookingError, mark_booking_paid
+from bookings.services import BookingError, change_status,mark_booking_paid
 from . import paypal_service
 from .models import Payment
 
@@ -77,6 +77,8 @@ def capture_paypal_payment(*, user, paypal_order_id):
         return payment
     if payment.status != Payment.Status.CREATED:
         raise PaymentError(f"Payment is {payment.status}; it cannot be captured.")
+    if payment.booking.status != Booking.Status.PENDING_PAYMENT:
+        raise PaymentError("This booking is no longer awaiting payment.")
 
     # 3. Ask PayPal to capture the money
     data = paypal_service.capture_order(paypal_order_id)
@@ -112,4 +114,40 @@ def capture_paypal_payment(*, user, paypal_order_id):
         payment.raw_response = data
         payment.save(update_fields=["status", "provider_payment_id", "raw_response", "updated_at"])
 
+    return payment
+
+def refund_booking_payment(booking_id):
+    """Refund booking.refund_paise on its paid PayPal payment. Safe to call repeatedly."""
+    booking = Booking.objects.get(pk=booking_id)
+    if booking.refund_paise <= 0:
+        return None
+
+    payment = Payment.objects.filter(
+        booking=booking, provider=Payment.Provider.PAYPAL,
+        status__in=[Payment.Status.PAID, Payment.Status.REFUNDED],
+    ).first()
+    if payment is None:
+        raise PaymentError("No paid payment found for this booking.")
+    if booking.refund_paise > payment.amount_paise:
+        raise PaymentError("Refund is larger than the amount paid.")
+
+    if payment.status == Payment.Status.PAID:
+        result = paypal_service.refund_capture(
+            payment.provider_payment_id, booking.refund_paise, f"refund-{payment.pk}")
+        if result.get("status") not in ("COMPLETED", "PENDING"):
+            raise PaymentError(f"Refund not accepted: {result.get('status')}")
+
+        with transaction.atomic():
+            payment = Payment.objects.select_for_update().get(pk=payment.pk)
+            if payment.status == Payment.Status.PAID:
+                payment.status = Payment.Status.REFUNDED
+                payment.refunded_paise = booking.refund_paise
+                payment.refund_id = result["id"]
+                payment.save(update_fields=[
+                    "status", "refunded_paise", "refund_id", "updated_at"])
+
+    with transaction.atomic():
+        locked = Booking.objects.select_for_update().get(pk=booking_id)
+        if locked.status == Booking.Status.CANCELLED:
+            change_status(locked, Booking.Status.REFUNDED)
     return payment

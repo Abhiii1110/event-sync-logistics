@@ -4,5 +4,5 @@ from .models import Booking
 
 @admin.register(Booking)
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ("id", "client", "vendor", "service", "start_time", "end_time", "status", "total_paise")
-    list_filter = ("status",)
+    list_display = ("id", "client", "vendor", "service", "start_time", "end_time", "status", "total_paise", "refund_paise", "cancelled_by")
+    list_filter = ("status","cancelled_by")
