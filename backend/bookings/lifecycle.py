@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from payments.paypal_service import PayPalError
 from payments.services import PaymentError, refund_booking_payment
+from payments.payouts import create_completion_payout, ensure_cancellation_payout
 
 from .models import Booking
 from .services import (
@@ -75,6 +76,7 @@ def complete_booking(*, booking_id, user=None, system=False):
         if booking.end_time > timezone.now():
             raise BookingError("The event has not ended yet.")
         change_status(booking, S.COMPLETED, completed_at=timezone.now())
+        create_completion_payout(booking)      # same transaction: both happen or neither
     return booking
 
 
@@ -98,7 +100,9 @@ def cancel_booking(*, booking_id, user=None, cancelled_by=None, reason="", requi
         )
 
     # Money moves only AFTER the cancellation is safely committed
-    return settle_refund(booking_id)
+    booking = settle_refund(booking_id)
+    ensure_cancellation_payout(booking)
+    return booking
 
 
 def settle_refund(booking_id):

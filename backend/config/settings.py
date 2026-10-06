@@ -161,3 +161,9 @@ VENDOR_RESPONSE_HOURS = 24         # vendor must confirm/decline within this tim
 AUTO_COMPLETE_AFTER_HOURS = 24     # auto-complete this long after the event ends
 CANCEL_FULL_REFUND_HOURS = 168     # client cancels 7+ days ahead: 100% refund
 CANCEL_HALF_REFUND_HOURS = 48      # 2 to 7 days ahead: 50%; under 2 days: 0%
+
+# Payout rules
+PAYOUT_PROVIDER = "mock"
+PAYOUT_DISPUTE_HOURS = 48            # vendor's money is held this long after completion
+PAYOUT_MAX_ATTEMPTS = 5              # after this many failures the payout needs admin attention
+PAYOUT_PROCESSING_TIMEOUT_MINUTES = 15
