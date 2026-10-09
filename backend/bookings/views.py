@@ -26,7 +26,7 @@ class BookingListCreateView(APIView):
         status_filter = request.query_params.get("status")
         if status_filter:
             qs = qs.filter(status=status_filter)
-        qs = qs.select_related("service", "vendor")
+        qs = qs.select_related("service", "vendor", "client", "payout")
         return Response(BookingSerializer(qs, many=True).data)
 
     def post(self, request):
@@ -139,3 +139,20 @@ class CancelPreviewView(APIView):
             "total_paise": booking.total_paise,
             "refund_paise": refund_amount(booking, actor) if can_cancel else 0,
         })
+
+class BookingDetailView(APIView):
+    """One booking, visible only to its client and its vendor."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        booking = (
+            Booking.objects.select_related("service", "vendor", "client", "payout")
+            .filter(pk=pk).first()
+        )
+        if booking is None:
+            return Response({"detail": "Booking not found."}, status=404)
+        try:
+            role_for(booking, request.user)
+        except BookingNotFound:
+            return Response({"detail": "Booking not found."}, status=404)
+        return Response(BookingSerializer(booking).data)
