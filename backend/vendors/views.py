@@ -2,6 +2,8 @@ from rest_framework import generics, viewsets, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models import ProtectedError
+from rest_framework.exceptions import PermissionDenied
 
 from .models import VendorProfile, Service
 from .permissions import IsVendor
@@ -49,7 +51,9 @@ class MyVendorProfileView(APIView):
         return Response(ser.data, status=status.HTTP_201_CREATED)
 
     def patch(self, request):
-        profile = request.user.vendor_profile
+        profile = getattr(request.user, "vendor_profile", None)
+        if profile is None:
+            return Response({"detail": "No profile yet."}, status=404)
         ser = VendorProfileSerializer(profile, data=request.data, partial=True)
         ser.is_valid(raise_exception=True)
         ser.save()
@@ -62,7 +66,19 @@ class MyServiceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsVendor]
 
     def get_queryset(self):
-        return Service.objects.filter(vendor__user=self.request.user)
+        return Service.objects.filter(vendor__user=self.request.user).order_by("-is_active", "title")
 
     def perform_create(self, serializer):
-        serializer.save(vendor=self.request.user.vendor_profile)
+        profile = getattr(self.request.user, "vendor_profile", None)
+        if profile is None:
+            raise PermissionDenied("Create your business profile first.")
+        serializer.save(vendor=profile)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except ProtectedError:
+            return Response(
+                {"detail": "This service has bookings, so it can't be deleted. Hide it instead."},
+                status=409,
+            )

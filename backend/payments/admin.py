@@ -1,7 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin,messages
 from django.utils import timezone
 
-from .models import Payment ,Payout
+from .models import Payment ,Payout,WebhookEvent
+from . webhooks import process_event
 
 
 @admin.register(Payment)
@@ -34,3 +35,23 @@ class PayoutAdmin(admin.ModelAdmin):
         n = queryset.filter(status=Payout.Status.FAILED).update(
             status=Payout.Status.PENDING, attempts=0, last_error="")
         self.message_user(request, f"{n} payout(s) queued for retry.")
+
+@admin.register(WebhookEvent)
+class WebhookEventAdmin(admin.ModelAdmin):
+    list_display = ("id", "event_type", "event_id", "status", "attempts", "note", "received_at")
+    list_filter = ("status", "event_type")
+    search_fields = ("event_id", "note")
+    readonly_fields = ("provider", "event_id", "event_type", "payload", "received_at", "processed_at")
+    actions = ["reprocess"]
+
+    @admin.action(description="Reprocess selected events")
+    def reprocess(self, request, queryset):
+        done = 0
+        for event in queryset:
+            WebhookEvent.objects.filter(pk=event.pk).update(status=WebhookEvent.Status.RECEIVED)
+            try:
+                process_event(event.payload)
+                done += 1
+            except Exception as exc:
+                self.message_user(request, f"{event.event_id} failed again: {exc}", level=messages.ERROR)
+        self.message_user(request, f"{done} event(s) reprocessed.")

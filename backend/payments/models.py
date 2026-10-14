@@ -50,6 +50,7 @@ class Payout(models.Model):
         FAILED = "FAILED", "Failed"
         DISPUTED = "DISPUTED", "Disputed"
         CANCELLED = "CANCELLED", "Cancelled"
+        REFUND_DUE = "REFUND_DUE", "Captured, refund due"
 
     # One payout per booking: the database itself prevents paying a booking twice
     booking = models.OneToOneField(
@@ -83,3 +84,31 @@ class Payout(models.Model):
 
     def __str__(self):
         return f"Payout #{self.pk} booking {self.booking_id} ({self.status})"
+
+class WebhookEvent(models.Model):
+    class Status(models.TextChoices):
+        RECEIVED = "RECEIVED", "Received"
+        PROCESSED = "PROCESSED", "Processed"
+        IGNORED = "IGNORED", "Ignored"
+        FAILED = "FAILED", "Failed (will be retried)"
+        REVIEW = "REVIEW", "Needs review"
+
+    provider = models.CharField(max_length=10, default="PAYPAL")
+    event_id = models.CharField(max_length=64)
+    event_type = models.CharField(max_length=64)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.RECEIVED)
+    payload = models.JSONField()
+    note = models.CharField(max_length=255, blank=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-received_at"]
+        constraints = [
+            # The database itself rejects a second row for the same PayPal event
+            models.UniqueConstraint(fields=["provider", "event_id"], name="uniq_webhook_event")
+        ]
+
+    def __str__(self):
+        return f"{self.event_type} {self.event_id} ({self.status})"

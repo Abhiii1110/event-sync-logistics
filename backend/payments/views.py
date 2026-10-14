@@ -5,12 +5,15 @@ from django.db.models import Q, Sum
 from django.http import Http404
 from django.shortcuts import render
 from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from bookings.models import Booking
 from vendors.permissions import IsVendor
+
+from . import paypal_service
+from .webhooks import process_event
 
 from .models import Payout
 from .paypal_service import PayPalError
@@ -142,3 +145,29 @@ class DisputeView(APIView):
         except PayoutError as e:
             return Response({"detail": str(e)}, status=409)
         return Response(PayoutSerializer(payout).data)
+
+class PayPalWebhookView(APIView):
+    authentication_classes = []        # PayPal is not a logged-in user. The signature is the proof.
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        event = request.data
+        if not isinstance(event, dict):
+            return Response({"detail": "Invalid payload."}, status=400)
+
+        try:
+            genuine = paypal_service.verify_webhook_signature(request.headers, event)
+        except PayPalError:
+            logger.exception("Could not verify webhook signature")
+            return Response({"detail": "Verification unavailable."}, status=503)
+        if not genuine:
+            return Response({"detail": "Invalid signature."}, status=400)
+
+        try:
+            process_event(event)
+        except ValueError:
+            return Response({"detail": "Invalid payload."}, status=400)
+        except Exception:
+            logger.exception("Webhook processing failed")
+            return Response({"detail": "Processing failed."}, status=500)   # PayPal will retry
+        return Response({"status": "ok"})

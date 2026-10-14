@@ -35,11 +35,12 @@ def blocking_bookings(vendor_id):
     )
 
 
-def has_overlap(vendor_id, start, end):
+def has_overlap(vendor_id, start, end, exclude_booking_id=None):
     # Two ranges overlap when each one starts before the other ends
-    return blocking_bookings(vendor_id).filter(
-        start_time__lt=end, end_time__gt=start
-    ).exists()
+    qs = blocking_bookings(vendor_id).filter(start_time__lt=end, end_time__gt=start)
+    if exclude_booking_id is not None:
+        qs = qs.exclude(pk=exclude_booking_id)
+    return qs.exists()
 
 
 def create_booking(*, client, service, start_time, event_location, notes=""):

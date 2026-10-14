@@ -7,11 +7,14 @@ from django.utils import timezone
 from bookings.lifecycle import cancel_booking, complete_booking, settle_refund
 from bookings.models import Booking
 from bookings.services import BookingError
-from payments.models import Payout
+
+from payments.models import Payout,Payment
+from payments.paypal_service import PayPalError
 from payments.payouts import (
     create_completion_payout, ensure_cancellation_payout, release_payout,
     reset_stuck_processing,
 )
+from payments.services import PayPalError, PaymentError,reconcile_open_payment,refund_unusable_payment
 
 S = Booking.Status
 
@@ -66,3 +69,24 @@ class Command(BaseCommand):
         for p in list(Payout.objects.filter(status=Payout.Status.PENDING, release_at__lte=now)):
             result = release_payout(p.pk)
             self.stdout.write(f"payout {p.pk}: {result.status}")
+            
+        # 7. Refund payments that arrived too late to be applied to their booking
+        for p in list(Payment.objects.filter(status=Payment.Status.REFUND_DUE)):
+            try:
+                refund_unusable_payment(p.pk)
+                self.stdout.write(f"late-payment refund: payment {p.pk} done")
+            except (PayPalError, PaymentError) as e:
+                self.stdout.write(f"late-payment refund: payment {p.pk} failed ({e})")
+
+        # 8. Ask PayPal about payments we never heard back about (a lost webhook)
+        since = now - timedelta(days=1)
+        open_payments = Payment.objects.select_related("booking").filter(
+            status=Payment.Status.CREATED,
+            created_at__lt=now - timedelta(minutes=2), created_at__gt=since)
+        for p in list(open_payments):
+            try:
+                result = reconcile_open_payment(p)
+                if result.status != Payment.Status.CREATED:
+                    self.stdout.write(f"reconciled payment {p.pk}: {result.status}")
+            except (PayPalError, PaymentError) as e:
+                self.stdout.write(f"reconcile: payment {p.pk} skipped ({e})")

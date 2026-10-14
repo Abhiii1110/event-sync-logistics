@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +26,9 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
+ALLOWED_HOSTS = ["*"]
+
 
 
 # Application definition
@@ -172,3 +174,8 @@ PAYOUT_PROVIDER = "mock"
 PAYOUT_DISPUTE_HOURS = 48            # vendor's money is held this long after completion
 PAYOUT_MAX_ATTEMPTS = 5              # after this many failures the payout needs admin attention
 PAYOUT_PROCESSING_TIMEOUT_MINUTES = 15
+
+
+# PayPal webhooks
+PAYPAL_WEBHOOK_ID = config("PAYPAL_WEBHOOK_ID", default="")
+PAYPAL_WEBHOOK_VERIFY = config("PAYPAL_WEBHOOK_VERIFY", default=True, cast=bool)
