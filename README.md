@@ -651,11 +651,11 @@ Add screenshots to `docs/screenshots/` and uncomment the lines below.
 ![Client dashboard](docs/screenshots/client-dashboard.png)
 ![Availability calendar](docs/screenshots/calendar.png)
 ![Vendor dashboard and earnings](docs/screenshots/vendor-dashboard.png)
-![PayPal checkout with hold timer](docs/screenshots/vendor-services.png)
-![PayPal checkout with hold timer](docs/screenshots/booking-form.png)
-![PayPal checkout with hold timer](docs/screenshots/paypal payment.png)
-![PayPal checkout with hold timer](docs/screenshots/admin dashboard.png)
-![PayPal checkout with hold timer](docs/screenshots/service status.png)
+![Vendor Services](docs/screenshots/vendor-services.png)
+![Booking Form](docs/screenshots/booking-form.png)
+![PayPal checkout with hold timer](docs/screenshots/paypal-payment.png)
+![Admin dashboard](docs/screenshots/admin-dashboard.png)
+![Service Status](docs/screenshots/service-status.png)
 
 
 ---
