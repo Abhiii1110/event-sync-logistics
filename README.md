@@ -645,13 +645,17 @@ Planned work:
 Add screenshots to `docs/screenshots/` and uncomment the lines below.
 
 
+![Sign-Up](docs/screenshots/signup.png)
+![Login](docs/screenshots/Login.png)
 ![Marketplace](docs/screenshots/marketplace.png)
-![Sign-Up](docs/screenshots/checkout.png)
-![Login](docs/screenshots/calender.png)
-![Availability calendar](docs/screenshots/calandar.png)
-![PayPal checkout with hold timer](docs/screenshots/checkout.png)
 ![Client dashboard](docs/screenshots/client-dashboard.png)
+![Availability calendar](docs/screenshots/calendar.png)
 ![Vendor dashboard and earnings](docs/screenshots/vendor-dashboard.png)
+![PayPal checkout with hold timer](docs/screenshots/vendor-services.png)
+![PayPal checkout with hold timer](docs/screenshots/booking-form.png)
+![PayPal checkout with hold timer](docs/screenshots/paypal payment.png)
+![PayPal checkout with hold timer](docs/screenshots/admin dashboard.png)
+![PayPal checkout with hold timer](docs/screenshots/service status.png)
 
 
 ---
