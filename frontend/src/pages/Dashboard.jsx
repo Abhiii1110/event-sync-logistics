@@ -84,7 +84,10 @@ function VendorDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   return (
     <div>
-      <h2>Vendor dashboard</h2>
+      <div className="page-head">
+        <h2>Vendor dashboard</h2>
+        <Link className="btn" to="/vendor/business">My business and services</Link>
+      </div>
       <Earnings refreshKey={refreshKey} />
       <BookingBoard
         viewer="VENDOR"

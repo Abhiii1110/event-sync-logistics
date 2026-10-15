@@ -7,3 +7,6 @@ export const CATEGORIES = [
 
 export const categoryLabel = (value) =>
   CATEGORIES.find((c) => c.value === value)?.label || value;
+
+// Display only. The server calculates the real fee.
+export const PLATFORM_FEE_PERCENT = 10;

@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Marketplace from "./pages/Marketplace";
 import Pay from "./pages/Pay";
 import Register from "./pages/Register";
+import VendorBusiness from "./pages/VendorBusiness";
 import VendorDetail from "./pages/VendorDetail";
 
 function NavBar() {
@@ -19,6 +20,7 @@ function NavBar() {
         {user ? (
           <>
             <Link to="/dashboard">Dashboard</Link>
+            {user.role === "VENDOR" && <Link to="/vendor/business">My business</Link>}
             <span className="muted">{user.username} ({user.role})</span>
             <button className="link" onClick={logout}>Log out</button>
           </>
@@ -52,6 +54,10 @@ export default function App() {
             <Route
               path="/bookings/:id/pay"
               element={<ProtectedRoute roles={["CLIENT"]}><Pay /></ProtectedRoute>}
+            />
+            <Route
+              path="/vendor/business"
+              element={<ProtectedRoute roles={["VENDOR"]}><VendorBusiness /></ProtectedRoute>}
             />
             <Route
               path="/dashboard"

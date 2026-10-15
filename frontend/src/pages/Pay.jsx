@@ -78,9 +78,11 @@ export default function Pay() {
     try {
       await api.post("/payments/paypal/capture/", { paypal_order_id: data.orderID });
     } catch (err) {
-      setPayError(
-        `${errorMessage(err)} Do not pay again until you have checked your booking status in your dashboard.`
-      );
+      // A 400 means the server explained exactly what happened. Anything else is uncertain.
+      const advice = err.response?.status === 400
+        ? ""
+        : " Do not pay again until you have checked your booking status in your dashboard.";
+      setPayError(`${errorMessage(err)}${advice}`);
     } finally {
       await load();            // shows the success screen if the payment really went through
       setProcessing(false);
@@ -158,6 +160,7 @@ export default function Pay() {
   return (
     <div className="card wide">
       <h2>This booking was cancelled</h2>
+      {payError && <p className="error">{payError}</p>}
       <p>Status: <StatusBadge status={booking.status} /></p>
       {details}
       <Link className="btn" to="/dashboard">View my bookings</Link>

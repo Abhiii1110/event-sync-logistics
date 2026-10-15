@@ -142,3 +142,13 @@ button.danger { background: #dc2626; }
 .stat.warn { border-left-color: #d97706; }
 .stat.info { border-left-color: #2563eb; }
 .stat.bad { border-left-color: #dc2626; }
+
+/* ---------- vendor business ---------- */
+.section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.service-row {
+  display: flex; justify-content: space-between; gap: 12px; align-items: flex-start;
+  flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid #e2e8f0;
+}
+.service-row:last-child { border-bottom: 0; }
+.service-row.inactive { opacity: 0.65; }
+.service-row > form { width: 100%; }
