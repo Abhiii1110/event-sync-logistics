@@ -644,13 +644,13 @@ Planned work:
 
 Add screenshots to `docs/screenshots/` and uncomment the lines below.
 
-<!--
+
 ![Marketplace](docs/screenshots/marketplace.png)
 ![Availability calendar](docs/screenshots/calendar.png)
 ![PayPal checkout with hold timer](docs/screenshots/checkout.png)
 ![Client dashboard](docs/screenshots/client-dashboard.png)
 ![Vendor dashboard and earnings](docs/screenshots/vendor-dashboard.png)
--->
+
 
 ---
 
