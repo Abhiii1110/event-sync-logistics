@@ -4,7 +4,7 @@ A full-stack marketplace where local event planners book, pay for and coordinate
 
 Built with **React, Django REST Framework and MySQL**. Phase 2 (planned) adds **RAG and LangChain agents** on top of the existing service layer.
 
-> Payments run in **PayPal sandbox mode** (fake money). See [Known limitations](#known-limitations).
+> Payments run in **PayPal sandbox mode** (fake money). See [Known limitations](#known-limitations).For more information you can visit Paypal official site to know about paypal sandbox account.
 
 ---
 
